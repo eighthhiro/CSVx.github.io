@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSVx</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@200;400;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="./infinity.png" type="image/x-icon">
+  <style>
+    @property --gradient-angle{
+      syntax: "<angle>";
+      initial-value: 0deg;
+      inherits: false;
+    }
+    body {
+      background: #000212;
+      color: #ffffff;
+      font-family: 'Nunito', sans-serif;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .main {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-rows: auto auto;
+      gap: 15px;
+      padding: 20px;
+    }
+
+    .bento-box {
+      background: linear-gradient(to bottom, #000316 0%, #ffffff06 100%);
+      backdrop-filter: blur(20px); /* Apply blur effect */
+      padding: 15px 32px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border */
+      overflow: hidden;
+    }
+
+    .table-container {
+      grid-column: 2 / span 2;
+      grid-row: 1;
+      overflow-y: auto;
+      max-height: 400px;
+    }
+
+    .output-table {
+      width: 100%;
+      border-collapse: collapse;
+      color: #ffffff;
+    }
+
+    .output-table td, .output-table th {
+      border: 1px solid #ffffff;
+      text-align: center;
+      padding: 8px;
+    }
+
+    .output-table th {
+      width: 10%;
+    }
+
+    .output-table td:first-child {
+      width: 5%; /* Row number column */
+    }
+
+    .output-table td:nth-child(2) {
+      width: 40%; /* Number 1 x Number 2 column */
+    }
+
+    .output-table td:nth-child(3) {
+      width: 60%; /* Product column */
+    }
+
+    .file-info, .guide {
+      grid-row: 2;
+    }
+
+    .file-input-button {
+      display: inline-block;
+      background-color: #1a73e8;
+      color: #ffffff;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    p {
+      opacity: 0.8;
+    }
+
+    .invalid-rows {
+      margin-top: 10px;
+      color: #ff7b7b; /* A red color for invalid row messages */
+      font-size: 14px;
+      white-space: pre-wrap; /* Ensures multi-line content is visible */
+      overflow-y: auto; /* Scrollable if content overflows */
+      max-height: 120px;
+      padding: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border */
+      display: none;
+    }
+
+    .infinity-image {
+      display: none; /* Hide initially */
+      width: 300px;
+      position: absolute;
+      bottom: -20px;
+      right: -20px;
+      rotate: -20deg;
+      opacity: 0.8;
+    }
+    .upload-image {
+      width: 150px;
+      position: absolute;
+      bottom: -20px;
+      right: -20px;
+      rotate: -20deg;
+      opacity: 0.25;
+      z-index: -1;
+    }
+    .statistics-image {
+      width: 150px;
+      position: absolute;
+      bottom: -20px;
+      right: -20px;
+      rotate: -20deg;
+      opacity: 0.25;
+      z-index: -1;
+    }
+    .help-image {
+      width: 150px;
+      position: absolute;
+      bottom: -20px;
+      right: -20px;
+      rotate: -20deg;
+      opacity: 0.25;
+      z-index: -1;
+    }
+    #brand{
+      color: #1a73e8;
+      text-shadow: 1px 1px 2px #1a73e8;
+    }
+    .bg{
+      position: fixed;
+      margin: -20px;
+      width: 100%;
+      height: 100%;
+      z-index: -100;
+    }
+    .bg::before,.bg::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: conic-gradient(
+        from var(--gradient-angle), #101855, #01020c, #121a63, #01020c, #101855
+      );
+      animation: rotation 10s linear infinite;
+    }
+    .bg::after{
+      filter: blur(4rem);
+    }
+    @keyframes rotation{
+      0% {--gradient-angle: 0deg;}
+      100% {--gradient-angle:360deg;}
+    }
+  </style>
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="main">
+    <!-- Table Output (Dominant Element) -->
+    <div class="bento-box table-container" id="output">
+      <p>No data available.</p>
+    </div>
+
+    <!-- Greeting & Introduction -->
+    <div class="bento-box">
+      <h2>Hello There! I am <span id="brand">CSVx</span></h2>
+      <p>Your go-to tool for quick and easy CSV two numbers multiplication calculations.</p>
+      <img id="infinityImage" class="infinity-image" src="./infinity.png" alt="Infinity Logo">
+    </div>
+
+    <!-- File Information & File Selector -->
+    <div class="bento-box file-info">
+      <h3>File Information</h3>
+      <p>Which CSV file do you want to compute with?</p>
+      <label class="file-input-button" id="fileButton">Select File</label>
+      <p id="fileInfo">No file selected.</p>
+      <img class="upload-image" src="./upload.png" alt="Upload Image">
+    </div>
+
+    <!-- Statistics -->
+    <div class="bento-box statistics">
+      <h3>Statistics</h3>
+      <p id="stats">Upload a file to see statistics.</p>
+      <div id="invalidRows" class="invalid-rows"></div>
+      <img class="statistics-image" src="./stats.png" alt="Statistics Image">
+    </div>
+
+    <!-- Help/Guide -->
+    <div class="bento-box guide">
+      <h3>How to Use</h3>
+      <p>1. Click 'Select File' to upload a CSV.<br>2. Ensure it contains 'Number1' and 'Number2' columns.<br>3. The computed results will be displayed.</p>
+      <img class="help-image" src="./cursor.png" alt="Help Image">
+    </div>
+  </div>
+
+  <script>
+    const fileInfoElement = document.getElementById("fileInfo");
+    const statsElement = document.getElementById("stats");
+    const invalidRowsElement = document.getElementById("invalidRows");
+    const outputSection = document.getElementById("output");
+    const infinityImage = document.getElementById("infinityImage");
+
+    document.getElementById("fileButton").addEventListener("click", function () {
+      const fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.accept = ".csv";
+      fileInput.style.display = "none";
+
+      fileInput.addEventListener("change", function (event) {
+        const file = event.target.files[0];
+        if (file) {
+          fileInfoElement.textContent = `Selected file: ${file.name} (Size: ${(file.size / 1024).toFixed(2)} KB)`;
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            processCSV(e.target.result);
+          };
+          reader.readAsText(file);
+        } else {
+          fileInfoElement.textContent = "No file selected.";
+        }
+      });
+      fileInput.click();
+    });
+
+    function processCSV(csvData) {
+      const rows = csvData.split("\n").map(row => row.split(",").map(cell => cell.trim()));
+      if (rows.length < 2) {
+        alert("CSV must have at least one data row.");
+        return;
+      }
+
+      const headers = rows[0];
+      const number1Index = headers.indexOf("Number1");
+      const number2Index = headers.indexOf("Number2");
+      if (number1Index === -1 || number2Index === -1) {
+        alert("CSV must contain 'Number1' and 'Number2' columns.");
+        return;
+      }
+
+      let totalEntries = 0;
+      let invalidRows = [];
+      let html = `
+        <table class='output-table'>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Number 1 x Number 2</th>
+              <th>Product</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        if (row.length > Math.max(number1Index, number2Index)) {
+          const num1 = parseFloat(row[number1Index]);
+          const num2 = parseFloat(row[number2Index]);
+          if (!isNaN(num1) && !isNaN(num2)) {
+            const product = num1 * num2;
+            html += `<tr>
+                      <td>${i}</td>
+                      <td>${num1.toFixed(2)} x ${num2.toFixed(2)}</td>
+                      <td>${product.toFixed(2)}</td>
+                    </tr>`;
+            totalEntries++;
+          } else {
+            invalidRows.push(`Row ${i + 1}: Invalid values`);
+          }
+        }
+      }
+
+      html += "</tbody></table>";
+      outputSection.innerHTML = html;
+      statsElement.textContent = `Processed ${totalEntries} valid rows.`;
+
+      if (invalidRows.length > 0) {
+        invalidRowsElement.innerHTML = "Invalid rows: <br>" + invalidRows.join("<br>");
+        invalidRowsElement.style.display = "block"; // Show invalid rows if there are any
+      } else {
+        invalidRowsElement.innerHTML = ""; // Clear the invalid rows section if none found
+        invalidRowsElement.style.display = "none"; // Hide invalid rows if none found
+      }
+
+      // Show the infinity image after results are shown
+      infinityImage.style.display = "block";
+    }
+  </script>
+</body>
+</html>
